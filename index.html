@@ -1,0 +1,1414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width,initial-scale=1.0,
+      maximum-scale=1.0,user-scalable=no">
+
+<title>Coin Hunter</title>
+
+<style>
+*{
+  box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+}
+
+html,body{
+  margin:0;
+  padding:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  background:#030b13;
+  font-family:Arial,Helvetica,sans-serif;
+  touch-action:none;
+}
+
+#game{
+  position:fixed;
+  inset:0;
+  width:100%;
+  height:100%;
+  display:block;
+}
+
+/* ================= LOADING ================= */
+
+#loading{
+  position:fixed;
+  inset:0;
+  z-index:999;
+
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+
+  background:#030b13;
+  color:white;
+}
+
+#loading h2{
+  margin:18px 0 5px;
+  font-size:28px;
+  letter-spacing:3px;
+  color:#00c8ff;
+}
+
+#loading p{
+  margin:0;
+  color:#9bb0bd;
+  font-size:12px;
+  letter-spacing:2px;
+}
+
+.loader{
+  width:55px;
+  height:55px;
+
+  border:5px solid #123044;
+  border-top:5px solid #00c8ff;
+
+  border-radius:50%;
+
+  animation:spin .8s linear infinite;
+}
+
+@keyframes spin{
+  to{
+    transform:rotate(360deg);
+  }
+}
+
+/* ================= HUD ================= */
+
+#hud{
+  position:fixed;
+  top:10px;
+  left:10px;
+  right:10px;
+
+  height:64px;
+
+  display:flex;
+  align-items:center;
+
+  background:rgba(4,15,27,.92);
+
+  border:2px solid #16415f;
+  border-radius:18px;
+
+  box-shadow:
+    0 0 15px rgba(0,174,255,.12),
+    inset 0 0 20px rgba(0,100,180,.08);
+
+  z-index:10;
+}
+
+.stat{
+  height:100%;
+  flex:1;
+
+  display:flex;
+  align-items:center;
+  gap:9px;
+
+  padding:8px 12px;
+
+  border-right:1px solid #17405a;
+}
+
+.stat:last-child{
+  border-right:none;
+}
+
+.icon{
+  width:38px;
+  height:38px;
+  min-width:38px;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  border-radius:50%;
+
+  font-size:20px;
+  font-weight:bold;
+}
+
+.coinIcon{
+  background:#ffbf00;
+  color:#5c3b00;
+
+  border:3px solid #ffe16a;
+
+  box-shadow:
+    0 0 12px rgba(255,193,7,.7);
+}
+
+.levelIcon{
+  background:#062d48;
+  color:#00c8ff;
+
+  border:2px solid #00aaff;
+
+  box-shadow:
+    0 0 12px rgba(0,170,255,.5);
+}
+
+.label{
+  color:#9bb0bd;
+  font-size:10px;
+  font-weight:bold;
+  letter-spacing:1px;
+}
+
+.value{
+  color:white;
+  font-size:20px;
+  font-weight:900;
+}
+
+/* ================= HP ================= */
+
+.hpBox{
+  flex:1.5;
+}
+
+.hpTop{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:5px;
+}
+
+.hpLabel{
+  color:#9bb0bd;
+  font-size:10px;
+  font-weight:bold;
+  letter-spacing:1px;
+}
+
+.hpNumber{
+  color:#55ff88;
+  font-size:12px;
+  font-weight:bold;
+}
+
+.hpBar{
+  width:100%;
+  height:12px;
+
+  background:#09151d;
+
+  border:1px solid #245064;
+  border-radius:8px;
+
+  overflow:hidden;
+}
+
+#hpFill{
+  width:100%;
+  height:100%;
+
+  background:linear-gradient(
+    90deg,
+    #00d85a,
+    #39ff78
+  );
+
+  border-radius:8px;
+
+  box-shadow:
+    0 0 10px rgba(0,255,100,.7);
+
+  transition:
+    width .25s ease,
+    background .25s ease;
+}
+
+/* ================= ARENA ================= */
+
+#arena{
+  position:fixed;
+
+  left:8px;
+  right:8px;
+
+  top:84px;
+  bottom:205px;
+
+  border:2px solid #087fc2;
+  border-radius:12px;
+
+  pointer-events:none;
+
+  box-shadow:
+    0 0 12px rgba(0,174,255,.35),
+    inset 0 0 20px rgba(0,100,180,.08);
+
+  z-index:2;
+}
+
+/* ================= CONTROLS ================= */
+
+#controls{
+  position:fixed;
+
+  left:50%;
+  bottom:18px;
+
+  transform:translateX(-50%);
+
+  width:220px;
+  height:165px;
+
+  z-index:20;
+}
+
+.control{
+  position:absolute;
+
+  width:68px;
+  height:68px;
+
+  border-radius:18px;
+
+  border:2px solid #4dbdff;
+
+  background:
+    linear-gradient(
+      145deg,
+      #172c3d,
+      #071521
+    );
+
+  box-shadow:
+    0 0 12px rgba(0,174,255,.35),
+    inset 0 0 12px rgba(0,130,210,.15);
+
+  color:white;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  font-size:31px;
+  font-weight:bold;
+
+  user-select:none;
+
+  transition:
+    transform .06s,
+    background .06s,
+    box-shadow .06s;
+}
+
+.control:active,
+.control.active{
+  transform:scale(.92);
+
+  background:
+    linear-gradient(
+      145deg,
+      #174666,
+      #0a2438
+    );
+
+  box-shadow:
+    0 0 20px rgba(0,190,255,.8),
+    inset 0 0 15px rgba(0,180,255,.3);
+}
+
+#up{
+  left:76px;
+  top:0;
+}
+
+#left{
+  left:0;
+  bottom:0;
+}
+
+#down{
+  left:76px;
+  bottom:0;
+}
+
+#right{
+  right:0;
+  bottom:0;
+}
+
+/* ================= GAME OVER ================= */
+
+#over{
+  display:none;
+
+  position:fixed;
+  inset:0;
+
+  z-index:100;
+
+  background:
+    radial-gradient(
+      circle at center,
+      rgba(20,50,70,.96),
+      rgba(0,5,10,.98)
+    );
+
+  color:white;
+
+  text-align:center;
+
+  padding-top:24vh;
+}
+
+.gameOverIcon{
+  width:76px;
+  height:76px;
+
+  margin:auto;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  border-radius:50%;
+
+  border:3px solid #ff3155;
+
+  color:#ff3155;
+
+  font-size:38px;
+  font-weight:900;
+
+  box-shadow:
+    0 0 25px rgba(255,30,70,.5);
+}
+
+#over h1{
+  margin:18px 0 8px;
+
+  font-size:34px;
+  letter-spacing:2px;
+}
+
+#final{
+  color:#9bb0bd;
+  font-size:16px;
+  margin-bottom:28px;
+}
+
+#restart{
+  position:static;
+
+  width:190px;
+  height:55px;
+
+  border-radius:14px;
+
+  border:2px solid #00b7ff;
+
+  background:#06283d;
+
+  color:white;
+
+  font-size:17px;
+  font-weight:bold;
+
+  box-shadow:
+    0 0 15px rgba(0,180,255,.4);
+}
+
+/* ================= SMALL PHONES ================= */
+
+@media(max-width:380px){
+
+  #hud{
+    height:58px;
+    top:7px;
+    left:7px;
+    right:7px;
+  }
+
+  .stat{
+    padding:6px;
+    gap:5px;
+  }
+
+  .icon{
+    width:30px;
+    height:30px;
+    min-width:30px;
+    font-size:16px;
+  }
+
+  .value{
+    font-size:16px;
+  }
+
+  .label{
+    font-size:8px;
+  }
+
+  #arena{
+    top:75px;
+    bottom:195px;
+  }
+
+  #controls{
+    bottom:12px;
+    transform:translateX(-50%) scale(.9);
+  }
+}
+</style>
+</head>
+
+<body>
+
+<!-- ================= LOADING ================= -->
+
+<div id="loading">
+
+  <div class="loader"></div>
+
+  <h2>COIN HUNTER</h2>
+
+  <p>LOADING...</p>
+
+</div>
+
+<canvas id="game"></canvas>
+
+<!-- ================= HUD ================= -->
+
+<div id="hud">
+
+  <div class="stat">
+
+    <div class="icon coinIcon">$</div>
+
+    <div>
+      <div class="label">COINS</div>
+      <div class="value" id="scoreText">0</div>
+    </div>
+
+  </div>
+
+
+  <div class="stat hpBox">
+
+    <div style="width:100%">
+
+      <div class="hpTop">
+
+        <span class="hpLabel">
+          HEALTH
+        </span>
+
+        <span class="hpNumber" id="hpText">
+          100 HP
+        </span>
+
+      </div>
+
+      <div class="hpBar">
+        <div id="hpFill"></div>
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <div class="stat">
+
+    <div class="icon levelIcon">L</div>
+
+    <div>
+      <div class="label">LEVEL</div>
+      <div class="value" id="levelText">1</div>
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- ARENA -->
+
+<div id="arena"></div>
+
+
+<!-- ================= CONTROLS ================= -->
+
+<div id="controls">
+
+  <div class="control"
+       id="up"
+       data-dir="up">
+    ▲
+  </div>
+
+  <div class="control"
+       id="left"
+       data-dir="left">
+    ◀
+  </div>
+
+  <div class="control"
+       id="down"
+       data-dir="down">
+    ▼
+  </div>
+
+  <div class="control"
+       id="right"
+       data-dir="right">
+    ▶
+  </div>
+
+</div>
+
+
+<!-- ================= GAME OVER ================= -->
+
+<div id="over">
+
+  <div class="gameOverIcon">!</div>
+
+  <h1>GAME OVER</h1>
+
+  <div id="final"></div>
+
+  <button id="restart">
+    PLAY AGAIN
+  </button>
+
+</div>
+
+
+<script>
+
+/* ==================================================
+   CANVAS
+================================================== */
+
+const canvas =
+  document.getElementById("game");
+
+const ctx =
+  canvas.getContext("2d");
+
+
+function resize(){
+
+  const dpr =
+    Math.min(window.devicePixelRatio || 1,2);
+
+  canvas.width =
+    innerWidth * dpr;
+
+  canvas.height =
+    innerHeight * dpr;
+
+  canvas.style.width =
+    innerWidth + "px";
+
+  canvas.style.height =
+    innerHeight + "px";
+
+  ctx.setTransform(
+    dpr,
+    0,
+    0,
+    dpr,
+    0,
+    0
+  );
+}
+
+resize();
+
+window.addEventListener(
+  "resize",
+  resize
+);
+
+
+/* ==================================================
+   GAME VARIABLES
+================================================== */
+
+let player;
+let coin;
+let enemy;
+
+let score = 0;
+
+/* HEALTH IS NOW 100 */
+let health = 100;
+
+let level = 1;
+
+let playing = true;
+
+let lastTime = 0;
+
+
+/* ==================================================
+   MOVEMENT
+================================================== */
+
+const move = {
+
+  up:false,
+  down:false,
+  left:false,
+  right:false
+
+};
+
+
+/* ==================================================
+   START GAME
+================================================== */
+
+function start(){
+
+  player = {
+
+    x:80,
+    y:180,
+
+    size:40,
+
+    speed:5
+
+  };
+
+
+  coin = {
+
+    x:300,
+    y:300,
+
+    size:17,
+
+    pulse:0
+
+  };
+
+
+  enemy = {
+
+    x:500,
+    y:350,
+
+    size:45,
+
+    speed:1.4
+
+  };
+
+
+  score = 0;
+
+  health = 100;
+
+  level = 1;
+
+  playing = true;
+
+  updateHUD();
+
+  document.getElementById(
+    "over"
+  ).style.display="none";
+
+
+  newCoin();
+
+  resetEnemy();
+
+}
+
+
+/* ==================================================
+   HUD
+================================================== */
+
+function updateHUD(){
+
+  document.getElementById(
+    "scoreText"
+  ).textContent = score;
+
+
+  document.getElementById(
+    "levelText"
+  ).textContent = level;
+
+
+  document.getElementById(
+    "hpText"
+  ).textContent =
+    Math.max(0,Math.ceil(health))
+    + " HP";
+
+
+  document.getElementById(
+    "hpFill"
+  ).style.width =
+    Math.max(0,health) + "%";
+
+
+  const hp =
+    document.getElementById("hpFill");
+
+
+  if(health > 60){
+
+    hp.style.background =
+      "linear-gradient(90deg,#00d85a,#39ff78)";
+
+  }
+  else if(health > 30){
+
+    hp.style.background =
+      "linear-gradient(90deg,#ffc400,#ffe45c)";
+
+  }
+  else{
+
+    hp.style.background =
+      "linear-gradient(90deg,#ff1744,#ff526e)";
+
+  }
+
+}
+
+
+/* ==================================================
+   CONTROLS
+================================================== */
+
+function controlButton(button){
+
+  const dir =
+    button.dataset.dir;
+
+
+  function press(e){
+
+    e.preventDefault();
+
+    move[dir] = true;
+
+    button.classList.add("active");
+
+  }
+
+
+  function release(e){
+
+    e.preventDefault();
+
+    move[dir] = false;
+
+    button.classList.remove("active");
+
+  }
+
+
+  button.addEventListener(
+    "pointerdown",
+    press
+  );
+
+  button.addEventListener(
+    "pointerup",
+    release
+  );
+
+  button.addEventListener(
+    "pointercancel",
+    release
+  );
+
+  button.addEventListener(
+    "pointerleave",
+    release
+  );
+
+}
+
+
+document
+  .querySelectorAll(".control")
+  .forEach(controlButton);
+
+
+/* ==================================================
+   KEYBOARD
+================================================== */
+
+document.addEventListener(
+  "keydown",
+  e => {
+
+    if(e.key==="ArrowUp")
+      move.up=true;
+
+    if(e.key==="ArrowDown")
+      move.down=true;
+
+    if(e.key==="ArrowLeft")
+      move.left=true;
+
+    if(e.key==="ArrowRight")
+      move.right=true;
+
+  }
+);
+
+
+document.addEventListener(
+  "keyup",
+  e => {
+
+    if(e.key==="ArrowUp")
+      move.up=false;
+
+    if(e.key==="ArrowDown")
+      move.down=false;
+
+    if(e.key==="ArrowLeft")
+      move.left=false;
+
+    if(e.key==="ArrowRight")
+      move.right=false;
+
+  }
+);
+
+
+/* ==================================================
+   RANDOM COIN
+================================================== */
+
+function newCoin(){
+
+  const top = 100;
+
+  const bottom =
+    Math.max(
+      top+100,
+      innerHeight-230
+    );
+
+
+  coin.x =
+    Math.random() *
+    Math.max(100,innerWidth-100)
+    + 50;
+
+
+  coin.y =
+    Math.random() *
+    (bottom-top)
+    + top;
+
+}
+
+
+/* ==================================================
+   RANDOM ENEMY
+================================================== */
+
+function resetEnemy(){
+
+  enemy.x =
+    Math.random() *
+    Math.max(100,innerWidth-100)
+    + 50;
+
+
+  enemy.y =
+    Math.random() *
+    Math.max(100,innerHeight-300)
+    + 100;
+
+}
+
+
+/* ==================================================
+   UPDATE
+================================================== */
+
+function update(delta){
+
+  if(!playing)
+    return;
+
+
+  const speed =
+    player.speed * delta;
+
+
+  /* PLAYER */
+
+  if(move.up)
+    player.y -= speed;
+
+  if(move.down)
+    player.y += speed;
+
+  if(move.left)
+    player.x -= speed;
+
+  if(move.right)
+    player.x += speed;
+
+
+  /* BOUNDARIES */
+
+  player.x =
+    Math.max(
+      10,
+      Math.min(
+        innerWidth-player.size-10,
+        player.x
+      )
+    );
+
+
+  player.y =
+    Math.max(
+      90,
+      Math.min(
+        innerHeight-player.size-210,
+        player.y
+      )
+    );
+
+
+  /* ENEMY CHASE */
+
+  const dx =
+    player.x - enemy.x;
+
+  const dy =
+    player.y - enemy.y;
+
+
+  const distance =
+    Math.sqrt(
+      dx*dx + dy*dy
+    );
+
+
+  if(distance > 1){
+
+    enemy.x +=
+      (dx/distance) *
+      enemy.speed *
+      delta;
+
+    enemy.y +=
+      (dy/distance) *
+      enemy.speed *
+      delta;
+
+  }
+
+
+  /* COIN ANIMATION */
+
+  coin.pulse +=
+    0.08 * delta;
+
+
+  /* COIN COLLISION */
+
+  const cx =
+    player.x +
+    player.size/2 -
+    coin.x;
+
+
+  const cy =
+    player.y +
+    player.size/2 -
+    coin.y;
+
+
+  const coinDistance =
+    Math.sqrt(
+      cx*cx + cy*cy
+    );
+
+
+  if(coinDistance < 35){
+
+    score++;
+
+
+    if(score % 5 === 0){
+
+      level++;
+
+      enemy.speed += .35;
+
+    }
+
+
+    newCoin();
+
+    updateHUD();
+
+  }
+
+
+  /* ================= ENEMY DAMAGE ================= */
+
+  if(distance < 45){
+
+    /* 25 DAMAGE PER HIT */
+    health -= 25;
+
+    health = Math.max(0,health);
+
+    resetEnemy();
+
+    updateHUD();
+
+
+    if(health <= 0){
+
+      health = 0;
+
+      playing = false;
+
+      updateHUD();
+
+
+      document.getElementById(
+        "final"
+      ).textContent =
+        "COINS: " +
+        score +
+        "   •   LEVEL: " +
+        level;
+
+
+      document.getElementById(
+        "over"
+      ).style.display="block";
+
+    }
+
+  }
+
+}
+
+
+/* ==================================================
+   DRAW
+================================================== */
+
+function draw(){
+
+  /* BACKGROUND */
+
+  ctx.fillStyle =
+    "#030b13";
+
+  ctx.fillRect(
+    0,
+    0,
+    innerWidth,
+    innerHeight
+  );
+
+
+  /* GRID */
+
+  ctx.strokeStyle =
+    "rgba(50,130,170,.10)";
+
+  ctx.lineWidth = 1;
+
+
+  const grid = 40;
+
+
+  for(
+    let x=0;
+    x<innerWidth;
+    x+=grid
+  ){
+
+    ctx.beginPath();
+
+    ctx.moveTo(x,70);
+
+    ctx.lineTo(
+      x,
+      innerHeight-180
+    );
+
+    ctx.stroke();
+
+  }
+
+
+  for(
+    let y=70;
+    y<innerHeight-180;
+    y+=grid
+  ){
+
+    ctx.beginPath();
+
+    ctx.moveTo(0,y);
+
+    ctx.lineTo(
+      innerWidth,
+      y
+    );
+
+    ctx.stroke();
+
+  }
+
+
+  /* ================= PLAYER ================= */
+
+  ctx.save();
+
+  ctx.shadowBlur = 18;
+
+  ctx.shadowColor =
+    "#00d9ff";
+
+  ctx.fillStyle =
+    "#00d9ff";
+
+
+  ctx.fillRect(
+    player.x,
+    player.y,
+    player.size,
+    player.size
+  );
+
+
+  ctx.shadowBlur = 0;
+
+  ctx.fillStyle =
+    "#031018";
+
+
+  ctx.fillRect(
+    player.x+8,
+    player.y+10,
+    7,
+    7
+  );
+
+
+  ctx.fillRect(
+    player.x+25,
+    player.y+10,
+    7,
+    7
+  );
+
+  ctx.restore();
+
+
+  /* ================= COIN ================= */
+
+  const pulse =
+    Math.sin(coin.pulse)*3;
+
+
+  ctx.save();
+
+  ctx.shadowBlur = 20;
+
+  ctx.shadowColor =
+    "#ffd000";
+
+  ctx.fillStyle =
+    "#ffc400";
+
+
+  ctx.beginPath();
+
+  ctx.arc(
+    coin.x,
+    coin.y,
+    coin.size+pulse,
+    0,
+    Math.PI*2
+  );
+
+  ctx.fill();
+
+
+  ctx.lineWidth = 3;
+
+  ctx.strokeStyle =
+    "#ffe76a";
+
+  ctx.stroke();
+
+
+  ctx.shadowBlur = 0;
+
+  ctx.fillStyle =
+    "#805900";
+
+  ctx.font =
+    "bold 18px Arial";
+
+  ctx.textAlign =
+    "center";
+
+  ctx.textBaseline =
+    "middle";
+
+  ctx.fillText(
+    "$",
+    coin.x,
+    coin.y+1
+  );
+
+
+  ctx.restore();
+
+
+  /* ================= ENEMY ================= */
+
+  ctx.save();
+
+  ctx.shadowBlur = 22;
+
+  ctx.shadowColor =
+    "#ff1744";
+
+  ctx.fillStyle =
+    "#ff1744";
+
+
+  ctx.fillRect(
+    enemy.x,
+    enemy.y,
+    enemy.size,
+    enemy.size
+  );
+
+
+  ctx.shadowBlur = 0;
+
+  ctx.fillStyle =
+    "white";
+
+
+  ctx.fillRect(
+    enemy.x+8,
+    enemy.y+10,
+    8,
+    8
+  );
+
+
+  ctx.fillRect(
+    enemy.x+28,
+    enemy.y+10,
+    8,
+    8
+  );
+
+
+  ctx.restore();
+
+}
+
+
+/* ==================================================
+   GAME LOOP
+================================================== */
+
+function loop(time){
+
+  if(!lastTime)
+    lastTime = time;
+
+
+  let delta =
+    (time-lastTime)/16.67;
+
+
+  delta =
+    Math.min(delta,2);
+
+
+  lastTime = time;
+
+
+  update(delta);
+
+  draw();
+
+  requestAnimationFrame(loop);
+
+}
+
+
+/* ==================================================
+   RESTART
+================================================== */
+
+document
+  .getElementById("restart")
+  .addEventListener(
+    "click",
+    () => {
+
+      lastTime = 0;
+
+      start();
+
+    }
+  );
+
+
+/* ==================================================
+   START
+================================================== */
+
+start();
+
+requestAnimationFrame(loop);
+
+
+/* ================= LOADING TIME ================= */
+
+setTimeout(() => {
+
+  document.getElementById(
+    "loading"
+  ).style.display = "none";
+
+},1200);
+
+</script>
+
+</body>
+</html>
